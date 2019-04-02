@@ -1,14 +1,14 @@
 {
-  "name": "produceLanDict",
+  "name": "produce_lan_dict",
   "version": "1.0.0",
-  "description": "produceLanDict",
+  "description": "produce_lan_dict",
   "main": "index.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/heju123/produceLanDict.git"
   },
   "keywords": [
-    "produceLanDict"
+    "produceLanDict","produce_lan_dict"
   ],
   "author": "heju",
   "license": "ISC",
