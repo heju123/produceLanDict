@@ -1,6 +1,6 @@
 {
   "name": "produce_lan_dict",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "produce_lan_dict",
   "main": "index.js",
   "repository": {
@@ -19,5 +19,8 @@
   "devDependencies": {
   },
   "scripts": {
+  },
+  "bin": {
+    "produce_lan_dict": "./bin/global.js"
   }
 }
