@@ -1,13 +1,13 @@
-const configPath = './produceLanDictCfg.json';
+const configPath = __dirname + '/produceLanDictCfg.json';
 
 const fs = require('fs');
 let config = require(configPath);
-const currentDict = require(config.langFile);
+const currentDict = require(__dirname + '/' + config.langFile);
 
 //例：(?!aaa) 匹配不包含aaa字符串
 let def = {
-    "langFile": "",
-    "resolveFiles": [],
+    "langFile": "zh.js",
+    "resolveFiles": ["**"],
     "match": [
         {
             "regExp": /(\'|\")(((?!\'|\").)*?)(\'|\")\.\l\((\'|\")(((?!\'|\").)*?)(\'|\")\)/,
@@ -102,13 +102,13 @@ let readDirSync = (path)=>{
 }
 
 paths.forEach((path)=>{
-    if (path.lastIndexOf('/**') === path.length - 3)//**结尾
+    if (path.lastIndexOf('**') === path.length - 2)//**结尾
     {
-        readDirSync(path.substring(0, path.length - 3));
+        readDirSync(__dirname + "/" + path.substring(0, path.length - 2));
     }
     else
     {
-        resolveFile(path);
+        resolveFile(__dirname + "/" + path);
     }
 });
 
