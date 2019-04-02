@@ -1,0 +1,23 @@
+{
+  "name": "produceLanDict",
+  "version": "1.0.0",
+  "description": "produceLanDict",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/heju123/produceLanDict.git"
+  },
+  "keywords": [
+    "produceLanDict"
+  ],
+  "author": "heju",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/heju123/produceLanDict/issues"
+  },
+  "homepage": "https://github.com/heju123/produceLanDict.git",
+  "devDependencies": {
+  },
+  "scripts": {
+  }
+}
