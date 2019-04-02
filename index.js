@@ -145,7 +145,7 @@ let writeFile = function(basePath, fileName, data){
                 if (err) {
                     reject(err);
                 }
-                //fs.close(fd);
+                fs.close(fd, function(){});
                 resolve();
             });
         });
