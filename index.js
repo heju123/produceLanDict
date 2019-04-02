@@ -1,9 +1,13 @@
+const configPath = './produceLanDictCfg.json';
+
 const fs = require('fs');
-let config = require('./config.json');
+let config = require(configPath);
 const currentDict = require(config.langFile);
 
 //例：(?!aaa) 匹配不包含aaa字符串
 let def = {
+    "langFile": "",
+    "resolveFiles": [],
     "match": [
         {
             "regExp": /(\'|\")(((?!\'|\").)*?)(\'|\")\.\l\((\'|\")(((?!\'|\").)*?)(\'|\")\)/,
