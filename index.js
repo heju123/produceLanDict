@@ -1,8 +1,10 @@
-const configPath = __dirname + '/produceLanDictCfg.json';
+const rootPath = process.cwd();
+
+const configPath = rootPath + '/produceLanDictCfg.json';
 
 const fs = require('fs');
 let config = require(configPath);
-const currentDict = require(__dirname + '/' + config.langFile);
+const currentDict = require(rootPath + '/' + config.langFile);
 
 //例：(?!aaa) 匹配不包含aaa字符串
 let def = {
@@ -104,11 +106,11 @@ let readDirSync = (path)=>{
 paths.forEach((path)=>{
     if (path.lastIndexOf('**') === path.length - 2)//**结尾
     {
-        readDirSync(__dirname + "/" + path.substring(0, path.length - 2));
+        readDirSync(rootPath + "/" + path.substring(0, path.length - 2));
     }
     else
     {
-        resolveFile(__dirname + "/" + path);
+        resolveFile(rootPath + "/" + path);
     }
 });
 
@@ -127,4 +129,4 @@ output += '\tdefine([], function () {\n';
 output += '\t\treturn res;\n';
 output += '\t});\n';
 output += '}';
-fs.writeFileSync(__dirname + '/' + config.langFile, output);
+fs.writeFileSync(rootPath + '/' + config.langFile, output);
