@@ -1,0 +1,613 @@
+﻿<div class="app-header" ng-hide="other.hideHeader">
+    <div class="app-header-container">
+        <mam-logo></mam-logo>
+        <mam-top-nav></mam-top-nav>
+        <mam-user-info></mam-user-info>
+    </div>
+</div>
+
+<!--主要搜索框-->
+<div class="main-search-area" ng-hide="other.hideHeader">
+    <div class="head-search">
+        <form class="search-form">
+            <search-type-filter ng-if="config.typeFilterEnable" 
+                types="search.entityTypes" current="search.currentEntityType" on-changed="search.entityTypeFilter(item)">
+            </search-type-filter>
+            <div class="search-input">
+                <mam-search-input search="search.keywordQuery()" keywords="search.request.keyword[0]" use-history="true"
+                    placeholder="{{'请输入你要搜索的内容'.l('search.searchPlaceholder')}}"></mam-search-input>
+                <div class="search-input-right">
+                    <div class="remove-keyword" title="{{l('search.removeKeywords', '移除关键字')}}" ng-click="search.request.keyword[0] = undefined;" ng-if="search.request.keyword[0]">
+                        <i class="fa fa-times"></i>
+                    </div>
+                    <mam-image-search on-click="search.onImageSearch(keywords)"></mam-image-search>
+                    <button type="button" ng-click="search.keywordQuery('entity')">
+                        <i class="fa fa-search"></i>
+                        <span>{{'检索文件'.l('search.searchFile')}}</span>
+                    </button>
+                    <button type="button" class="btn-catalogue" ng-click="search.keywordQuery('do_catalogue')" ng-if="config.searchBase.subfunctions.searchCataEnable">
+                        <i class="fa fa-search"></i>
+                        <span>{{'检索片段'.l('search.001')}}</span>
+                    </button>
+                </div>
+            </div>
+            <div class="hot-keyword" ng-if="search.hotKeywords.length > 0 && config.searchBase.subfunctions.hotKeywordEnable">
+                <ul>
+                    <label>{{'热门搜索：'.l('search.002')}}</label>
+                    <li ng-repeat="hotword in search.hotKeywords track by $index">
+                        <a title="{{hotword.keyword}}" ng-click="search.request.keyword[0]=hotword.keyword;search.keywordQuery();">
+                            <span>{{hotword.keyword}}</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </form>
+        <senior-search-con ng-show="config.searchAdvancedSearchEnable" search="senior.query(obj)" senior-list="senior.fields" default-val="search.defaultSeniorValue" ng-if="config.theme.name !== 'zb'"></senior-search-con>
+    </div>
+</div>
+<!--检索模板-->
+<div class="search-template" ng-hide="other.hideHeader" ng-if="config.searchBase.subfunctions.searchTemplateEnable && config.theme.name=='blue'">
+    <div class="common-template" ng-if="commonTemplates.length>0" ui-sortable ng-model="commonTemplates">
+        <div class="template-child " ng-class="{'active': item.last}" ng-repeat="item in commonTemplates track by $index">
+            <span class="content-template" ng-click="changeTemplate(item)">{{item.name}}</span>
+            <span>
+                <i class="fa fa-remove" ng-if="item.canDelete" ng-click="deleteTemplate(item)"></i>
+            </span>
+        </div>
+    </div>
+    <div class="custom-template" ui-sortable="sortableOptions" ng-model="templates.value">
+        <div class="template-child" ng-class="{'active': item.last}" ng-repeat="item in templates.value track by $index">
+            <span class="content-template" ng-click="changeTemplate(item)">{{item.name}}</span>
+            <span>
+                <i class="fa fa-remove" ng-click="deleteTemplate(item)"></i>
+            </span>
+        </div>
+    </div>
+</div>
+<!--主体内容-->
+<div class="app-main">
+    <!--侧边-->
+    <div class="app-side">
+        <!--层面-->
+        <div class="app-facet">
+            <div class="facet-selected-panel">
+                <div class="facet-panel-heading">
+                    <div class="facet-panel-title" ng-if="facet.selectItems.length == 0">
+                        <i class="fa fa-filter" aria-hidden="true"></i>
+                        <span>{{'条件过滤'.l('search.003')}}</span>
+                    </div>
+                    <div class="facet-panel-title" ng-if="facet.selectItems.length > 0">
+                        <i class="fa fa-filter" aria-hidden="true"></i>
+                        <span>{{'已选择'.l('search.004')}}</span>
+                    </div>
+                    <a ng-if="facet.selectItems.length > 0" ng-click="facet.clear()">{{'清空'.l('search.005')}}</a>
+                    <!--<a class="selected_remove" style="margin-right: 15px" ng-if="selectedShowFacets.length > 0 && config.searchTemplateEnable" ng-click="saveTemplate()" title="保存检索模版">保存</a>-->
+
+                </div>
+                <div class="facet-panel-body" ng-if="facet.selectItems.length > 0 ">
+                    <div class="item" ng-repeat="item in facet.selectItems">
+                        <div class="item-title">{{item.name}}</div>
+                        <div class="item-data-box">
+                            <div class="item-data" ng-repeat="val in item.values">
+                                <span title="{{val.showValue}}">{{val.showValue}}</span>
+                                <i class="fa fa-times block_label_remove" ng-click="facet.remove(item.field,val.value)"
+                                    title="{{'删除'.l('com.del')}}"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="facet-list" ng-show="facet.items != null && facet.items.length > 0">
+                <div class="facet-panel" ng-repeat="item in facet.items" ng-mouseenter="facet.showPanel(item)"
+                    ng-mouseleave="facet.hidePanel(item,true)">
+                    <div class="facet-panel-heading" ng-class="{'active':$parent.facet.current==item}">
+                        <button class="operate-show" ng-click="facet.showSection(item);">
+                            <i class="fa fa-angle-down" ng-if="!item.showSection" title="{{'展开层面'.l('search.006')}}"></i>
+                            <i class="fa fa-angle-up" ng-if="item.showSection" title="{{'收起层面'.l('search.007')}}"></i>
+                        </button>
+                        <div class="facet-panel-title">
+                            {{item.facetShowName}}
+                        </div>
+                        <div class="facet-full">
+                            <button class="operate-more" ng-class="{'active':$parent.$parent.facet.current==item}">
+                                <i class="fa fa-angle-right"></i>
+                            </button>
+                        </div>
+                        <!--<button class="operate-more" ng-if="facet.facetFieldName != 'catalogstate'"
+                                ng-class="{'active':facet.showPanel}" ng-click="facet.showPanel=!facet.showPanel">
+                            <i class="fa fa-angle-right"></i>
+                        </button>-->
+                    </div>
+                    <div class="facet-panel-body" ng-show="item.showSection">
+                        <div class="facet-data-item" ng-repeat="val in item.facetValue | limitTo : 5">
+                            <a class="data-item-title" title="{{val.showValue}}" ng-click="facet.select(item,val)">
+                                {{val.showValue}}
+                            </a>
+                            <span class="data-item-count">
+                                ({{val.count}})
+                            </span>
+                        </div>
+                    </div>
+                    <div class="facet-full-panel" ng-show="$parent.facet.current==item">
+                        <div class="facet-full-panel-wrap">
+                            <div class="facet-full-panel-heading">
+                                <span>{{item.facetShowName}}</span>
+                                <i class="fa fa-times" ng-click="$parent.facet.current=false" title="{{'关闭'.l('com.close')}}"></i>
+                            </div>
+                            <div class="facet-full-panel-body" flex-scrollable>
+                                <div class="facet-data-item" ng-repeat="v in item.facetValue" ng-class="{'active': v.selected}"
+                                    ng-click="facet.multipleSelect(item,v.value,$event)">
+                                    <i class="fa fa-check" ng-if="v.selected"></i>
+
+                                    <div class="data-item-title" title="{{v.showValue}}">{{v.showValue}}</div>
+                                    <div class="data-item-count">{{v.count}}</div>
+                                    <!--<span class="data-item-operate">
+                                        <i class="fa fa-times" ng-if="v.selected" title="取消选择"
+                                           ng-click="quitMultipleOption(facet.facetFieldName,facet.facetShowName,facet.facetValue,v.value,v.showValue,$event)"></i>
+                                    </span>-->
+                                </div>
+
+                            </div>
+                            <div class="facet-full-panel-footer">
+                                <span class="count">
+                                    {{'总共'.l('search.008')}}：
+                                    <strong>{{item.facetValue.length}}</strong>{{'条'.l('search.009')}}
+                                </span>
+                                <button class="btn btn-primary" type="button" ng-click="facet.submitMultipleSelect(item)">{{'完成'.l('com.finish')}}</button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!--主体-->
+    <div class="app-content">
+
+        <div class="other-toolbar">
+            <div class="sort-main">
+                <span>
+                    <i class="fa fa-sort-amount-desc"></i>
+                    {{'排序方式'.l('search.010')}}：
+                </span>
+                <select class="form-control" ng-model="search.sort.current" ng-options="item.name for item in search.sort.items"
+                    ng-change="search.changeSort()"></select>
+            </div>
+            <div class="sort-time">
+                <span>
+                    <i class="fa fa-calendar"></i>
+                    {{'入库时间'.l('search.011')}}：
+                </span>
+                <select class="form-control" ng-model="search.time.current" ng-options="item.value as item.name for item in search.time.items"
+                    ng-change="search.changeTime()"></select>
+            </div>
+            <div class="sort-time-range" ng-show="search.time.showRange">
+                <div class="sort-time-range-group">
+                    <div class="time-range-title">{{'起始'.l('search.012')}}：</div>
+                    <input type="text" id="start" class="form-control" date-time-picker show-time="'day'" ng-model="search.time.start"
+                        min-date="search.time.minDate" max-date="search.time.end?search.time.end:''">
+                    <i class="fa fa-calendar" title="{{'起始时间'.l('search.013')}}" ng-click="search.showRangeDatepicker(0)"></i>
+                </div>
+                <div class="sort-time-range-group">
+                    <div class="time-range-title">{{'结束'.l('search.014')}}：</div>
+                    <input type="text" id="end" class="form-control" date-time-picker show-time="'day'" ng-model="search.time.end"
+                        min-date="search.time.start" max-date="search.time.maxDate">
+                    <i class="fa fa-calendar" title="{{'结束时间'.l('search.015')}}" ng-click="search.showRangeDatepicker(1)"></i>
+                </div>
+                <button type="submit" title="{{'时间段检索'.l('search.016')}}" ng-click="search.dateRangeQuery()">
+                    <i class="fa fa-filter"></i>
+                </button>
+            </div>
+            <div class="result-search">
+                <input type="text" class="form-control" placeholder="{{'在结果中搜索'.l('search.017')}}" ng-model="search.request.keyword[1]"
+                    ng-keydown="search.keywordQuery(null,$event)" />
+                <i class="fa fa-search" ng-click="search.keywordQuery()"></i>
+            </div>
+            <div class="view-mode">
+                <button class="border-radius" ng-click="search.changeMode(0)" ng-class="{'active':search.viewMode == 0}"
+                    uib-tooltip="{{'图例模式'.l('search.018')}}" tooltip-placement="bottom">
+                    <i class="fa fa-th"></i>
+                </button>
+                <button class="border-radius" ng-click="search.changeMode(1)" ng-class="{'active':search.viewMode == 1}"
+                    uib-tooltip="{{'详细模式'.l('search.019')}}" tooltip-placement="bottom">
+                    <i class="fa fa-th-large"></i>
+                </button>
+                <button class="border-radius" ng-click="search.changeMode(2)" ng-class="{'active':search.viewMode == 2}"
+                    uib-tooltip="{{'列表模式'.l('search.020')}}" tooltip-placement="bottom">
+                    <i class="fa fa-list"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="operate-toolbar">
+            <div class="operate-toolbar-container">
+                <label class="mam-checkbox">
+                    <input type="checkbox" ng-model="allselected" mam-checkbox mam-all-checkbox collection="search.result.data"
+                        property="selected" />
+                    <span>{{'全选'.l('com.allSelect')}}</span>
+                </label>
+                <button class="btn btn-default" ng-disabled="operate.isDisabledByBtnName('挑选')" ng-if="config.chooseBasketEnable&&search.request.resourceName=='entity'"
+                    ng-click="chooseBasket.add()" uib-tooltip="{{'挑选'.l('search.021')}}" tooltip-placement="bottom">
+                    <i class="icon iconfont icon-basket"></i>
+                </button>
+                <button ng-if="search.request.resourceName=='entity'" class="btn btn-default" ng-disabled="operate.isDisabledByBtnName('下载')"
+                    ng-click="operate.download()" permission-show="default_download" uib-tooltip="{{'下载'.l('com.download')}}" tooltip-placement="bottom">
+                    <i class="fa fa-download"></i>
+                </button>
+                <button class="btn btn-default" ng-if="config.favoriteEnable&&search.request.resourceName=='entity'"
+                    ng-disabled="operate.isDisabledByBtnName('收藏')" ng-click="operate.favorite()" uib-tooltip="{{'收藏'.l('com.store')}}"
+                    tooltip-placement="bottom">
+                    <i class="fa fa-star"></i>
+                </button>
+                <button ng-if="search.request.resourceName=='entity'" class="btn btn-default" ng-disabled="operate.isDisabledByBtnName('编目')"
+                    ng-click="operate.createCatalogueTask()" permission-show="catalogue_taskcreate" uib-tooltip="{{'编目'.l('com.catalog')}}"
+                    tooltip-placement="bottom">
+                    <i class="icon iconfont icon-catalogue"></i>
+                </button>
+                <button class="btn btn-default" ng-if="config.shareEnable&&search.request.resourceName=='entity'"
+                    ng-disabled="operate.isDisabledByBtnName('分享')" ng-click="operate.share()" uib-tooltip="{{'分享'.l('com.share')}}"
+                    tooltip-placement="bottom">
+                    <i class="fa fa-share-alt"></i>
+                </button>
+                <button ng-if="search.request.resourceName=='entity'" class="btn btn-default" ng-disabled="operate.isDisabledByBtnName('删除')"
+                    permission-show="default_delete" ng-click="operate.delete()" uib-tooltip="{{'删除'.l('com.del')}}" tooltip-placement="bottom">
+                    <i class="fa fa-trash-o"></i>
+                </button>
+                <button class="btn btn-default" ng-disabled="operate.isDisabledByBtnName('内容发布')" permission-show="default_export"
+                    ng-click="operate.outstore()" uib-tooltip="{{config.outstoreTitle}}" tooltip-placement="bottom">
+                    <i class="fa fa-share-square-o"></i>
+                </button>
+                <button class="btn btn-default" ng-disabled="operate.isDisabledByBtnName('归档')" permission-show="archive_archivetaskcreate"
+                    ng-click="operate.archive()" uib-tooltip="{{'发起归档'.l('search.022')}}" tooltip-placement="bottom">
+                    <i class="fa fa-dot-circle-o"></i>
+                </button>
+                <button class="btn btn-default" ng-disabled="operate.isDisabledByBtnName('回迁')" permission-show="archive_retrievetaskcreate"
+                    ng-click="operate.retrieve()" uib-tooltip="{{'发起回迁'.l('search.023')}}" tooltip-placement="bottom">
+                    <i class="fa fa-hdd-o"></i>
+                </button>
+
+                <!--(萧山云定制)创建选题任务-->
+                <!-- <button class="btn btn-default" ng-click="operate.newTask()" ng-if="fusionMedialConfig.topicPlanning_Enable && search.request.resourceName=='entity'"
+                    uib-tooltip="创建选题任务" tooltip-placement="bottom">
+                    <i class="fa fa-share"></i>
+                </button> -->
+
+                <button ng-if="search.request.resourceName=='entity' && config.theme.name !== 'zb'" class="btn btn-default" ng-click="operate.outputByExcel()"
+                    uib-tooltip="{{'Excel导出'.l('search.024')}}" tooltip-placement="bottom">
+                    <i class="fa fa-file-excel-o"></i>
+                </button>
+
+                <button class="btn btn-default" ng-click="search.refresh()" uib-tooltip="{{'刷新'.l('com.refresh')}}" tooltip-placement="bottom">
+                    <i class="fa fa-refresh"></i>
+                </button>
+                <div class="pagesize-select">
+                    <select class="form-control" ng-model="search.request.size" ng-options="sz.size as sz.name for sz in search.sizes"
+                        ng-change="search.changePageSize()" placeholder="{{'分页条数选择'.l('search.025')}}"></select>
+                </div>
+                <form class="mam-pager-mini" ng-submit="search.pageChanged()">
+                    <span class="pager-info">{{'共'.l('search.026')}}
+                        <strong>{{search.result.recordTotal}}</strong>{{'条'.l('search.009')}}</span>
+                    <span class="pager-control">
+                        <button type="button" ng-disabled="search.isEmptyData||search.result.pageIndex<2" ng-click="search.pageChanged(1)">
+                            <i class="fa fa-angle-double-left"></i>
+                        </button>
+                        <button type="button" ng-disabled="search.isEmptyData||search.result.pageIndex<2" ng-click="search.pageChanged(search.result.pageIndex-1)">
+                            <i class="fa fa-angle-left"></i>
+                        </button>
+                        <span>{{'当前第'.l('search.027')}}
+                            <input class="input-page-index" type="text" ng-model="search.request.page" />{{'页'.l('search.028')}}</span>
+                        <button type="button" ng-disabled="search.isEmptyData||search.result.pageIndex==search.result.pageTotal"
+                            ng-click="search.pageChanged(search.result.pageIndex+1)">
+                            <i class="fa fa-angle-right"></i>
+                        </button>
+                        <button type="button" ng-disabled="search.isEmptyData||search.result.pageIndex==search.result.pageTotal"
+                            ng-click="search.pageChanged(search.result.pageTotal)">
+                            <i class="fa fa-angle-double-right"></i>
+                        </button>
+                    </span>
+                </form>
+            </div>
+        </div>
+
+        <div class="content-wrap">
+
+            <!-- 图例模式 -->
+            <div class="legend-wrap" ng-if="!search.isEmptyData && !search.error && search.viewMode == 0">
+                <div class="item" ng-repeat="item in search.result.data" ng-class="{'active': item.selected}">
+                    <div class="keyframe-wrap keyframe-wrap-{{item.type}}" >
+                        <a mam-entity-view entity="item" ng-click="operate.redactZB($event,item.contentId_,item.site_,item.catalogstate)">
+                            <mam-keyframe src="item.keyframepath" ext="item.fileext" type="item.type_"></mam-keyframe>
+                            <span class="entity-play-btn" ng-if="item.type_ == 'video'||search.request.resourceName=='do_catalogue'"></span>
+                        </a>
+                        <!--<span class="list_cover_img" ng-class="item.formatFlag | formatFlagIcon" ng-if="item.type_ == 'video'||resource=='do_catalogue'"></span>-->
+                        <span class="capture-status" ng-if="item.dynamicResponse.capturestatus && item.dynamicResponse.capturestatus != 0 ">{{'处理中'.l('search.029')}}
+                            <i class="fa fa-spinner" aria-hidden="true"></i>
+                        </span>
+                        <span class="capture-status capture-status-icon {{item.dynamicResponse.status|entityStatus}}"
+                            ng-if="!item.dynamicResponse.capturestatus && item.dynamicResponse.status && item.dynamicResponse.status !='0'"
+                            uib-tooltip="{{item.dynamicResponse.status|entityStatusTxt}}" tooltip-placement="bottom">
+                            <i class="icon iconfont {{item.dynamicResponse.status|entityStatusHtml}}"></i>
+                        </span>
+                        <!--<span class="capture-status capture-catalog" ng-if="item.catalogstate==='编目中'" uib-tooltip="编目中" tooltip-placement="bottom"> <i class="icon iconfont icon-catalogue" aria-hidden="true"></i></span>-->
+                        <span class="entity-type video-type" ng-if="item.type_ == 'video'||search.request.resourceName=='do_catalogue'">{{item.formatFlag
+                            | formatVideoType}}</span>
+                        <span class="entity-type">{{item.type_ | entityTypeShortName}}</span>
+                        <span class="entity-duration" ng-if="item.type_ == 'video' || item.type_ == 'audio'">{{
+                            item.duration | l100NsToTc:item.type_:item.frameRate}}</span>
+                        <span class="entity-duration" ng-if="search.request.resourceName=='do_catalogue'">{{
+                            item.duration | l100NsToTc:'video':item.frameRate}}</span>
+
+                        <div class="right-info-layer">
+                            <div class="status-info active" uib-tooltip="{{'已编目'.l('search.030')}}" tooltip-append-to-body="true" ng-if="item.catalogstate == 1 || item.catalogstate == '已编目'">
+                                <i class="fa fa-check-circle"></i>
+                            </div>
+                            <div class="status-info active" uib-tooltip="{{'编目中'.l('search.031')}}" tooltip-append-to-body="true" ng-if="item.catalogstate == 10 || item.catalogstate == '编目中'">
+                                <i class="icon iconfont icon-catalogue"></i>
+                            </div>
+                            <div class="status-info active" uib-tooltip="{{operate.isArchiveStatus(item) ? '已存储'.l('search.032') : '未存储'.l('search.033')}}"
+                                tooltip-append-to-body="true" ng-if="operate.isArchiveStatus(item)">
+                                <i class="fa fa-database"></i>
+                            </div>
+                            <!-- ng-if="operate.isOssState(item)" -->
+                            <div class="status-info active" uib-tooltip="{{operate.isOssState(item) ? 'OSS存储'.l('search.034') : ''}}"
+                                tooltip-append-to-body="true" ng-if="operate.isOssState(item)">
+                                <i class="fa fa-cloud"></i>
+                            </div>
+                            <div class="status-info active" uib-tooltip="{{search.getBarcodes(item)}}"
+                                tooltip-append-to-body="true" ng-if="search.getBarcodes(item)!=='未在介质'">
+                                <i class="fa fa-dot-circle-o"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="title-wrap">
+                        <label class="mam-checkbox">
+                            <input type="checkbox" ng-model="item.selected" mam-checkbox />
+                        </label>
+                        <a ng-if="search.request.resourceName=='entity'" mam-entity-view entity="item" ng-bind-html="item.name_ | trusted"
+                            uib-tooltip="{{item.nameText}}" tooltip-placement="top-left"></a>
+                        <a ng-if="search.request.resourceName=='do_catalogue'" mam-entity-view entity="item"
+                            ng-bind-html="item.title | trusted" uib-tooltip="{{item.title}}" tooltip-placement="top-left"></a>
+                    </div>
+                    <div class="entity-tools menu">
+                        <ul>
+                            <li permission-show="Default_Edit" ng-if="item.permissionInfo.canWrite" uib-tooltip="{{'编辑'.l('com.edit')}}"
+                                tooltip-placement="top">
+                                <a class="entity-op-link" ng-click="operate.redact(item.contentId_,item.site_,item.catalogstate)">
+                                    <i class="fa fa-pencil"></i>
+                                    <span>{{'编辑'.l('com.edit')}}</span>
+                                </a>
+                                <!--<ul class="sub-menu">
+                                    <li><a><i class="fa fa-pencil"></i><span>xx</span></a></li>
+                                </ul>-->
+                            </li>
+                            <li ng-if="config.favoriteEnable&&search.request.resourceName=='entity'" uib-tooltip="{{item.isCollected?'取消收藏'.l('com.cancelStore'):'收藏'.l('com.store')}}"
+                                tooltip-placement="top">
+                                <a class="entity-op-link" ng-click="operate.favoriteOrCancel(item)" ng-class="{'collected':item.isCollected}">
+                                    <i class="fa fa-star"></i>
+                                    <span>{{item.isCollected?'取消收藏'.l('com.cancelStore'):'收藏'.l('com.store')}}</span>
+                                </a>
+                            </li>
+                            <li ng-if="config.shareEnable&&search.request.resourceName=='entity'" uib-tooltip="{{'分享'.l('com.share')}}"
+                                tooltip-placement="top">
+                                <a class="entity-op-link" ng-click="operate.share(item.contentId_)">
+                                    <i class="fa fa-share-alt"></i>
+                                    <span>{{'分享'.l('com.share')}}</span>
+                                </a>
+                            </li>
+                            <li ng-if="item.type_!='dataset'&&search.request.resourceName=='entity'" permission-show="default_download"
+                                uib-tooltip="{{'下载'.l('com.download')}}" tooltip-placement="top">
+                                <a class="entity-op-link" ng-click="operate.download(item.contentId_)">
+                                    <i class="fa fa-download"></i>
+                                    <span>{{'下载'.l('com.download')}}</span>
+                                </a>
+                            </li>
+                            <!-- [萧山云提出的]zhanghui@sobey.com[QQ310213220] add at 2017-03-17 -->
+                            <li permission-show="default_export" uib-tooltip="{{config.outstoreTitle}}"
+                                tooltip-placement="top">
+                                <a class="entity-op-link" ng-click="operate.outstore(item)">
+                                    <i class="fa fa-share-square-o"></i>
+                                    <span>{{config.outstoreTitle}}</span>
+                                </a>
+                            </li>
+                            <!-- 从OSS S3删除元素 -->
+                            <li permission-show="default_export" uib-tooltip="{{'OSS删除'.l('search.035')}}" tooltip-placement="top" ng-if="operate.isOssState(item)">
+                                <a class="entity-op-link" ng-click="operate.deleteFromOSS(item)">
+                                    <i class="glyphicon glyphicon-remove"></i>
+                                </a>
+                            </li>
+
+                            <entity-op-links entity-content-id="{{item.contentId_}}" entity-type="{{item.type_}}"
+                                entity-streaming-media-path="{{item.dynamicResponse.previewFile_}}" entity-can-edit="item.permissionInfo.canWrite"
+                                entity-can-delete="item.permissionInfo.canDelete" entity-can-execute="item.permissionInfo.canExecute">
+                            </entity-op-links>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 详细模式 -->
+            <div class="list-wrap" ng-if="!search.isEmptyData && !search.error && search.viewMode == 1">
+                <div class="list-contrainer">
+                    <div class="item" ng-repeat="item in search.result.data" ng-class="{'active': item.selected}">
+                        <div class="title-wrap">
+                            <label class="mam-checkbox">
+                                <input type="checkbox" ng-model="item.selected" mam-checkbox />
+                            </label>
+                            <div class="title-link">
+                                <a ng-if="search.request.resourceName=='entity'" mam-entity-view entity="item"
+                                    ng-bind-html="item.name_ | trusted" uib-tooltip="{{item.nameText}}"
+                                    tooltip-placement="bottom-left" ></a>
+                                <a ng-if="search.request.resourceName=='do_catalogue'" mam-entity-view entity="item"
+                                    ng-bind-html="item.title | trusted" uib-tooltip="{{item.title}}" tooltip-placement="bottom-left" ></a>
+                            </div>
+                            <div class="entity-tools menu">
+                                <ul>
+                                    <li permission-show="Default_Edit" ng-if="item.permissionInfo.canWrite" uib-tooltip="{{'编辑'.l('com.edit')}}"
+                                        tooltip-placement="top">
+                                        <a class="entity-op-link" ng-click="operate.redact(item.contentId_,item.site_,item.catalogstate)">
+                                            <i class="fa fa-pencil"></i>
+                                            <span>{{'编辑'.l('com.edit')}}</span>
+                                        </a>
+                                    </li>
+                                    <li ng-if="config.favoriteEnable&&search.request.resourceName=='entity'"
+                                        uib-tooltip="{{item.isCollected?'取消收藏'.l('com.cancelStore'):'收藏'.l('com.store')}}" tooltip-placement="top">
+                                        <a class="entity-op-link" ng-click="operate.favoriteOrCancel(item)" ng-class="{'collected':item.isCollected}">
+                                            <i class="fa fa-star"></i>
+                                            <span>{{item.isCollected?'取消收藏'.l('com.cancelStore'):'收藏'.l('com.store')}}</span>
+                                        </a>
+                                    </li>
+                                    <li ng-if="config.shareEnable&&search.request.resourceName=='entity'" uib-tooltip="{{'分享'.l('com.share')}}"
+                                        tooltip-placement="top">
+                                        <a class="entity-op-link" ng-click="operate.share(item.contentId_)">
+                                            <i class="fa fa-share-alt"></i>
+                                            <span>{{'分享'.l('com.share')}}</span>
+                                        </a>
+                                    </li>
+                                    <li permission-show="default_download" uib-tooltip="{{'下载'.l('com.download')}}" tooltip-placement="top"
+                                        ng-if="item.type_!='dataset'&&search.request.resourceName=='entity'">
+                                        <a class="entity-op-link" ng-click="operate.download(item.contentId_)">
+                                            <i class="fa fa-download"></i>
+                                            <span>{{'下载'.l('com.download')}}</span>
+                                        </a>
+                                    </li>
+                                    <!-- [萧山云提出的]zhanghui@sobey.com[QQ310213220] add at 2017-03-17 -->
+                                    <li permission-show="default_export" uib-tooltip="{{config.outstoreTitle}}"
+                                        tooltip-placement="top">
+                                        <a class="entity-op-link" ng-click="operate.outstore(item)">
+                                            <i class="fa fa-share-square-o"></i>
+                                            <span>{{config.outstoreTitle}}</span>
+                                        </a>
+                                    </li>
+                                    <!-- 从OSS S3删除元素 -->
+                                    <li permission-show="default_export" uib-tooltip="{{'OSS删除'.l('search.035')}}" tooltip-placement="top"
+                                        ng-if="operate.isOssState(item)">
+                                        <a class="entity-op-link" ng-click="operate.deleteFromOSS(item)">
+                                            <i class="glyphicon glyphicon-remove"></i>
+                                        </a>
+                                    </li>
+
+                                    <entity-op-links entity-content-id="{{item.contentId_}}" entity-type="{{item.type_}}"
+                                        entity-streaming-media-path="{{item.dynamicResponse.previewFile_}}"
+                                        entity-can-edit="item.permissionInfo.canWrite" entity-can-delete="item.permissionInfo.canDelete"
+                                        entity-can-execute="item.permissionInfo.canExecute">
+                                    </entity-op-links>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="keyframe-wrap  keyframe-wrap-{{item.type}}">
+                            <a mam-entity-view entity="item" ng-click="operate.redactZB($event,item.contentId_,item.site_,item.catalogstate)">
+                                <mam-keyframe src="item.keyframepath" ext="item.fileext" type="item.type_"></mam-keyframe>
+                                <span class="entity-play-btn" ng-if="item.type_ == 'video'||search.request.resourceName=='do_catalogue'"></span>
+                            </a>
+                            <!--<span class="list_cover_img" ng-class="item.formatFlag | formatFlagIcon" ng-if="item.type_ == 'video'||resource=='do_catalogue'"></span>-->
+                            <span class="capture-status" ng-if="item.dynamicResponse.capturestatus && item.dynamicResponse.capturestatus != 0 ">{{'处理中'.l('search.036')}}
+                                <i class="fa fa-spinner" aria-hidden="true"></i>
+                            </span>
+                            <span class="capture-status capture-status-icon {{item.dynamicResponse.status|entityStatus}}"
+                                ng-if="!item.dynamicResponse.capturestatus && item.dynamicResponse.status && item.dynamicResponse.status !='0'"
+                                uib-tooltip="{{item.dynamicResponse.status|entityStatusTxt}}" tooltip-placement="bottom">
+                                <i class="icon iconfont {{item.dynamicResponse.status|entityStatusHtml}}"></i>
+                            </span>
+                            <!--<span class="capture-status capture-catalog" ng-if="item.catalogstate==='编目中'" uib-tooltip="编目中" tooltip-placement="bottom"> <i class="icon iconfont icon-catalogue" aria-hidden="true"></i></span>-->
+                            <span class="entity-type video-type" ng-if="item.type_ == 'video'||search.request.resourceName=='do_catalogue'">{{item.formatFlag
+                                | formatVideoType}}</span>
+                            <span class="entity-type">{{item.type_ | entityTypeShortName}}</span>
+                            <span class="entity-duration" ng-if="item.type_ == 'video' || item.type_ == 'audio'">{{
+                                item.duration | l100NsToTc:item.type_:item.frameRate}}</span>
+                            <span class="entity-duration" ng-if="search.request.resourceName=='do_catalogue'">{{
+                                item.duration | l100NsToTc:'video':item.frameRate}}</span>
+
+                            <div class="right-info-layer">
+                                <div class="status-info active" uib-tooltip="{{'已编目'.l('search.037')}}" tooltip-append-to-body="true" ng-if="item.catalogstate == 1 || item.catalogstate == '已编目'">
+                                    <i class="fa fa-check-circle"></i>
+                                </div>
+                                <div class="status-info active" uib-tooltip="{{'编目中'.l('search.038')}}" tooltip-append-to-body="true" ng-if="item.catalogstate == 10 || item.catalogstate == '编目中'">
+                                    <i class="icon iconfont icon-catalogue"></i>
+                                </div>
+                                <div class="status-info active" uib-tooltip="{{operate.isArchiveStatus(item) ? '已存储'.l('search.039') : '未存储'.l('search.040')}}"
+                                    tooltip-append-to-body="true" ng-if="operate.isArchiveStatus(item)">
+                                    <i class="fa fa-database"></i>
+                                </div>
+                                <!-- ng-if="operate.isOssState(item)" -->
+                                <div class="status-info active" uib-tooltip="{{operate.isOssState(item) ? 'OSS存储'.l('search.034') : ''}}"
+                                    tooltip-append-to-body="true" ng-if="operate.isOssState(item)">
+                                    <i class="fa fa-cloud"></i>
+                                </div>
+                                <div class="status-info active" uib-tooltip="{{search.getBarcodes(item)}}"
+                                    tooltip-append-to-body="true" ng-if="search.getBarcodes(item)!=='未在介质'">
+                                    <i class="fa fa-dot-circle-o"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div ng-if="search.request.resourceName=='entity'" class="info-wrap">
+                            {{ @searchListTemplate }}
+                        </div>
+                        <div ng-if="search.request.resourceName=='do_catalogue'" class="info-wrap">
+                            <div class="info-item">
+                                <div class="info-content">{{'类型：'.l('search.041')}}{{ item.type_ }}</div>
+                                <div class="info-content" title="{{ item.nameText}}" ng-bind-html="'所属节目：'.l('search.042')+item.name_ | trusted"></div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-content">{{'资料提供者：'.l('search.043')}}{{ item.source_provider }}</div>
+                                <div class="info-content">{{'归属栏目：'.l('search.044')}}{{ item.column }}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-content">{{'入点：'.l('search.045')}}{{item.inpoint|l100NsToTc:'video':item.frameRate}}</div>
+                                <div class="info-content">{{'出点：'.l('search.046')}}{{item.outpoint|l100NsToTc:'video':item.frameRate}}</div>
+                            </div>
+                            <div class="info-item" ng-if="item.keyword !='' && item.keyword != null">
+                                <div>{{'关键字：'.l('search.047')}}</div>
+                                <div class="info-content" ng-bind-html="item.keyword | trusted"></div>
+                            </div>
+                            <div class="info-item" ng-if="item.description !=null && item.description != ''">
+                                <div>{{'描述：'.l('search.048')}}</div>
+                                <div class="info-content" ng-bind-html="item.description | cutString:150 | trusted"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 列表(表格)模式 -->
+            <div class="table-wrap" ng-if="!search.isEmptyData && !search.error && search.viewMode == 2" >
+                {{ @searchTableTemplate }}
+            </div>
+
+            <div class="no-data" ng-if="search.isEmptyData && !search.error">
+                {{'很抱歉，没有找到相关内容'.l('search.049')}}
+                <div class="error-recovery-word" ng-if="search.recoveryWords.length > 0">
+                    <label>{{'你是不是要搜索：'.l('search.050')}}</label>
+                    <a title="{{word}}" ng-repeat="word in search.recoveryWords track by $index" ng-click="search.request.keyword[0]=word;search.keywordQuery();">{{word}}</a>
+                </div>
+            </div>
+
+            <div class="load-error" ng-if="search.error">
+                <p>{{'数据加载失败'.l('search.051')}}</p>
+                <p>{{'请检查您的网络连接或稍后重试'.l('search.052')}}</p>
+            </div>
+            <div class="pager-box">
+                <mam-pager ng-if="!search.error && search.loaded" record-total="search.result.recordTotal" page-index="search.result.pageIndex"
+                    page-size="search.result.pageSize" page-total="search.result.pageTotal" show-text='true'
+                    page-changed="search.pageChanged(page)"></mam-pager>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div class="app-footer">
+    <div class="app-footer-container" ng-bind-html="config.footer | trusted"></div>
+</div>
+
+<mam-back-to-top></mam-back-to-top>
+
+<div class="choose-entry" ng-if="config.chooseBasketEnable&&chooseBasket.total>0" ng-click="chooseBasket.show()">
+    <i class="icon iconfont icon-basket"></i>
+    <span>{{'挑选列表'.l('search.053')}}(<strong>{{chooseBasket.total}}</strong>)</span>
+</div>

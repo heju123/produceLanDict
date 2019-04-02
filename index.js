@@ -1,10 +1,16 @@
+var path = require("path");
 const rootPath = process.cwd();
 
 const configPath = rootPath + '/produceLanDictCfg.json';
 
 const fs = require('fs');
 let config = require(configPath);
-const currentDict = require(rootPath + '/' + config.langFile);
+let currentDict;
+try{
+    currentDict = require(rootPath + '/' + config.langFile);
+}
+catch(e){
+}
 
 //例：(?!aaa) 匹配不包含aaa字符串
 let def = {
@@ -72,7 +78,7 @@ let getKeyValueStr = (obj) => {
     return result;
 }
 
-let dict = currentDict;
+let dict = currentDict || {};
 
 const paths = config.resolveFiles;
 
@@ -114,6 +120,48 @@ paths.forEach((path)=>{
     }
 });
 
+// 递归创建目录 异步方法
+function mkdirs(dirname, callback) {
+    fs.exists(dirname, function (exists) {
+        if (exists) {
+            callback();
+        } else {
+            mkdirs(path.dirname(dirname), function () {
+                fs.mkdir(dirname, callback);
+            });
+        }
+    });
+}
+
+let writeFile = function(basePath, fileName, data){
+    return new Promise((resolve, reject)=>{
+        // 打开文件
+        fs.open(basePath+'/'+fileName, `w`, function(err, fd) {
+            if (err) {
+                reject(err);
+            }
+
+            fs.writeFile(basePath+'/'+fileName, data, function (err) {
+                if (err) {
+                    reject(err);
+                }
+                //fs.close(fd);
+                resolve();
+            });
+        });
+    });
+};
+
+let writeLangFile = function(path, data){
+    let dir = path.substring(0, path.lastIndexOf('/'));
+    let fileName = path.substring(path.lastIndexOf('/') + 1, path.length);
+    mkdirs(dir, ()=>{
+        writeFile(dir, fileName, data).then(()=>{
+        }, (err)=>{
+        });
+    });
+}
+
 //输出结果
 let output = '//简体\n';
 output += 'var res = {};\n\n';
@@ -129,4 +177,4 @@ output += '\tdefine([], function () {\n';
 output += '\t\treturn res;\n';
 output += '\t});\n';
 output += '}';
-fs.writeFileSync(rootPath + '/' + config.langFile, output);
+writeLangFile(rootPath + '/' + config.langFile, output);
