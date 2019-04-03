@@ -70,10 +70,10 @@ let setDict = (baseObj, path, value) => {
 
 let getKeyValueStr = (obj) => {
     let result = '';
-    for (let key in obj)
-    {
+    var sortedObjKeys = Object.keys(obj).sort();
+    sortedObjKeys.forEach((key)=>{
         result += '\t\'' + key + '\'' + ': ' + '\'' + obj[key] + '\'' + ',\n';
-    }
+    });
     result = result.substring(0, result.lastIndexOf(',')) + '\n';
     return result;
 }
@@ -165,10 +165,10 @@ let writeLangFile = function(path, data){
 //输出结果
 let output = '//简体\n';
 output += 'var res = {};\n\n';
-for (let key in dict)
-{
+var sortedObjKeys = Object.keys(dict).sort();
+sortedObjKeys.forEach((key)=>{
     output += 'res.' + key + ' = ' + '{\n' + getKeyValueStr(dict[key]) + '}\n';
-}
+});
 output += '\n';
 output += 'if ( typeof module === "object" && module && typeof module.exports === "object" ) {\n';
 output += '\tmodule.exports = res;\n';
