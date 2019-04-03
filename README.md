@@ -1,6 +1,6 @@
 # produceLanDict
 ## 介绍
-	自动生成国际化字典文件内容
+	自动生成国际化字典文件
 ## 安装及使用方式
 > 运行 npm install -g produce_lan_dict 安装  
 > 在项目根目录创建produceLanDictCfg.json文件，配置需要处理的js或Html文件位置，在这些js或html文件内先写好国际化所需要的标识代码，比如 l('com.test', '国际化测试')。写好后无需再定义字典文件内容，produceLanDict 
