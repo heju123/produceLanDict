@@ -19,6 +19,13 @@ res.com = {
 	'share': '分享',
 	'store': '收藏'
 }
+res.entity = {
+	'baseInfo': '基本信息',
+	'catalogInfo': '编目信息',
+	'history': '操作记录',
+	'tags': '标签',
+	'techCensor': '技审信息'
+}
 res.search = {
 	'001': '检索片段',
 	'002': '热门搜索：',
