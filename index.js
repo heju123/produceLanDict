@@ -101,7 +101,7 @@ let readDirSync = (path)=>{
             readDirSync(path + "/" + ele);
         }else{
             let ext = ele.substring(ele.lastIndexOf('.'));
-            if (ext === '.html' || ext === '.js' || ext === '.tsx')
+            if (ext === '.html' || ext === '.js' || ext === '.tsx' || ext === '.ts')
             {
                 resolveFile(path + "/" + ele);
             }
