@@ -1,6 +1,9 @@
 //简体
 var res = {};
 
+res.bindNewModal = {
+	'plzSelectColumn': '请选择栏目！'
+}
 res.com = {
 	'addSuccess': ' 添加成功',
 	'allSelect': '全选',
