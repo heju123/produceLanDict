@@ -1,3 +1,5 @@
+var chineseConverter = require("./utils/chineseConverter");
+
 var path = require("path");
 const rootPath = process.cwd();
 
@@ -68,11 +70,16 @@ let setDict = (baseObj, path, value) => {
     });
 }
 
-let getKeyValueStr = (obj) => {
+let getKeyValueStr = (obj, type) => {
     let result = '';
     var sortedObjKeys = Object.keys(obj).sort();
     sortedObjKeys.forEach((key)=>{
-        result += '\t\'' + key + '\'' + ': ' + '\'' + obj[key] + '\'' + ',\n';
+        if (type === 'zh'){
+            result += '\t\'' + key + '\'' + ': ' + '\'' + obj[key] + '\'' + ',\n';
+        }
+        else {
+            result += '\t\'' + key + '\'' + ': ' + '\'' + chineseConverter.s2t(obj[key]) + '\'' + ',\n';
+        }
     });
     result = result.substring(0, result.lastIndexOf(',')) + '\n';
     return result;
@@ -163,18 +170,23 @@ let writeLangFile = function(path, data){
 }
 
 //输出结果
-let output = '//简体\n';
-output += 'var res = {};\n\n';
-var sortedObjKeys = Object.keys(dict).sort();
-sortedObjKeys.forEach((key)=>{
-    output += 'res.' + key + ' = ' + '{\n' + getKeyValueStr(dict[key]) + '}\n';
-});
-output += '\n';
-output += 'if ( typeof module === "object" && module && typeof module.exports === "object" ) {\n';
-output += '\tmodule.exports = res;\n';
-output += '} else if ( typeof define === "function" && define.amd ) {\n';
-output += '\tdefine([], function () {\n';
-output += '\t\treturn res;\n';
-output += '\t});\n';
-output += '}';
-writeLangFile(rootPath + '/' + config.langFile, output);
+let output = function(type){
+    let output = 'var res = {};\n\n';
+    var sortedObjKeys = Object.keys(dict).sort();
+    sortedObjKeys.forEach((key)=>{
+        output += 'res.' + key + ' = ' + '{\n' + getKeyValueStr(dict[key], type) + '}\n';
+    });
+    output += '\n';
+    output += 'if ( typeof module === "object" && module && typeof module.exports === "object" ) {\n';
+    output += '\tmodule.exports = res;\n';
+    output += '} else if ( typeof define === "function" && define.amd ) {\n';
+    output += '\tdefine([], function () {\n';
+    output += '\t\treturn res;\n';
+    output += '\t});\n';
+    output += '}';
+    writeLangFile(rootPath + '/' + (type === 'zh' ? config.langFile : config.traditionalLangFile), output);
+}
+output('zh')
+if (config.traditionalLangFile){
+    output('cht')
+}

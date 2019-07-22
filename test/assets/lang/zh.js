@@ -1,4 +1,3 @@
-//简体
 var res = {};
 
 res.bindNewModal = {
