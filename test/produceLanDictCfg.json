@@ -1,6 +1,7 @@
 {
   "langFile": "assets/lang/zh.js",
   "traditionalLangFile": "assets/lang/cht.js",
+  "enLangFile": "assets/lang/en.js",
   "resolveFiles": [
     "search/**"
   ]

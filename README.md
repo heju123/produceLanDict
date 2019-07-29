@@ -9,6 +9,8 @@
 ```javascript
 var config = {
   "langFile": "./assets/lang/zh.js",// 字典文件路径
+  "traditionalLangFile": "assets/lang/cht.js",//繁体字典文件输出路径，不配置就不生成繁体版
+  "enLangFile": "assets/lang/en.js",//英文字典文件输出路径，不配置就不生成英文版
   "resolveFiles": [// 批量处理的js或html
     "./search/**"
   ],

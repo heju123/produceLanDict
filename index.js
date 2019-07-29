@@ -1,4 +1,5 @@
 var chineseConverter = require("./utils/chineseConverter");
+var googleTranslate = require("google-translate-api");
 
 var path = require("path");
 const rootPath = process.cwd();
@@ -70,6 +71,12 @@ let setDict = (baseObj, path, value) => {
     });
 }
 
+function* inner(){
+
+    yield 'inner';
+
+}
+
 let getKeyValueStr = (obj, type) => {
     let result = '';
     var sortedObjKeys = Object.keys(obj).sort();
@@ -77,7 +84,10 @@ let getKeyValueStr = (obj, type) => {
         if (type === 'zh'){
             result += '\t\'' + key + '\'' + ': ' + '\'' + obj[key] + '\'' + ',\n';
         }
-        else {
+        else if (type === 'cht') {
+            result += '\t\'' + key + '\'' + ': ' + '\'' + chineseConverter.s2t(obj[key]) + '\'' + ',\n';
+        }
+        else if (type === 'en') {
             result += '\t\'' + key + '\'' + ': ' + '\'' + chineseConverter.s2t(obj[key]) + '\'' + ',\n';
         }
     });
@@ -174,7 +184,9 @@ let output = function(type){
     let output = 'var res = {};\n\n';
     var sortedObjKeys = Object.keys(dict).sort();
     sortedObjKeys.forEach((key)=>{
-        output += 'res.' + key + ' = ' + '{\n' + getKeyValueStr(dict[key], type) + '}\n';
+        output += 'res.' + key + ' = ' + '{\n';
+        output += getKeyValueStr(dict[key], type);
+        output += '}\n';
     });
     output += '\n';
     output += 'if ( typeof module === "object" && module && typeof module.exports === "object" ) {\n';
@@ -184,9 +196,20 @@ let output = function(type){
     output += '\t\treturn res;\n';
     output += '\t});\n';
     output += '}';
-    writeLangFile(rootPath + '/' + (type === 'zh' ? config.langFile : config.traditionalLangFile), output);
+    if (type === 'zh'){
+        writeLangFile(rootPath + '/' + config.langFile, output);
+    }
+    else if (type === 'cht'){
+        writeLangFile(rootPath + '/' + config.traditionalLangFile, output);
+    }
+    else if (type === 'en'){
+        writeLangFile(rootPath + '/' + config.enLangFile, output);
+    }
 }
 output('zh')
 if (config.traditionalLangFile){
     output('cht')
+}
+if (config.enLangFile){
+    output('en')
 }

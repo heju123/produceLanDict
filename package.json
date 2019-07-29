@@ -1,14 +1,18 @@
 {
   "name": "produce_lan_dict",
-  "version": "1.0.11",
+  "version": "1.1.0",
   "description": "produce_lan_dict",
   "main": "index.js",
+  "dependencies": {
+    "google-translate-api": "^2.3.0"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/heju123/produceLanDict.git"
   },
   "keywords": [
-    "produceLanDict","produce_lan_dict"
+    "produceLanDict",
+    "produce_lan_dict"
   ],
   "author": "heju",
   "license": "ISC",
@@ -16,8 +20,7 @@
     "url": "https://github.com/heju123/produceLanDict/issues"
   },
   "homepage": "https://github.com/heju123/produceLanDict.git",
-  "devDependencies": {
-  },
+  "devDependencies": {},
   "scripts": {
     "test": "cd test && node ../index.js"
   },
