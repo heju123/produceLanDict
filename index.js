@@ -1,5 +1,7 @@
 var chineseConverter = require("./utils/chineseConverter");
-var googleTranslate = require("google-translate-api");
+const {LocalStorage} = require('node-localstorage');
+var localStorage = new LocalStorage('./.cache')
+const { google } = require('translation.js')
 
 var path = require("path");
 const rootPath = process.cwd();
@@ -71,28 +73,45 @@ let setDict = (baseObj, path, value) => {
     });
 }
 
-function* inner(){
-
-    yield 'inner';
-
-}
-
-let getKeyValueStr = (obj, type) => {
-    let result = '';
-    var sortedObjKeys = Object.keys(obj).sort();
-    sortedObjKeys.forEach((key)=>{
+let getKeyValue = (obj, key, type) => {
+    return new Promise((resolve, reject)=>{
         if (type === 'zh'){
-            result += '\t\'' + key + '\'' + ': ' + '\'' + obj[key] + '\'' + ',\n';
+            resolve('\t\'' + key + '\'' + ': ' + '\'' + obj[key] + '\'' + ',\n');
         }
         else if (type === 'cht') {
-            result += '\t\'' + key + '\'' + ': ' + '\'' + chineseConverter.s2t(obj[key]) + '\'' + ',\n';
+            resolve('\t\'' + key + '\'' + ': ' + '\'' + chineseConverter.s2t(obj[key]) + '\'' + ',\n');
         }
         else if (type === 'en') {
-            result += '\t\'' + key + '\'' + ': ' + '\'' + chineseConverter.s2t(obj[key]) + '\'' + ',\n';
+            let storageValue = localStorage.getItem('translate_en_' + obj[key]);
+            if (storageValue){
+                console.log('translate to en from cache: '+obj[key]+' -> '+storageValue);
+                resolve('\t\'' + key + '\'' + ': ' + '\'' + storageValue + '\'' + ',\n');
+            }
+            else {
+                google.translate(obj[key]).then(res => {
+                    if (res.result && res.result.length > 0){
+                        console.log('translate to en from internet: '+obj[key]+' -> '+res.result[0]);
+                        localStorage.setItem('translate_en_' + obj[key], res.result[0].replace(/\'/g, '\\\''));
+                        resolve('\t\'' + key + '\'' + ': ' + '\'' + res.result[0].replace(/\'/g, '\\\'') + '\'' + ',\n');
+                    } else {
+                        console.error('translate failure: '+obj[key]);
+                        resolve('\t\'' + key + '\'' + ': ' + '\'' + obj[key] + '\'' + ',\n');
+                    }
+                }).catch(err=>{
+                    console.error('translate failure: '+obj[key]);
+                    resolve('\t\'' + key + '\'' + ': ' + '\'' + obj[key] + '\'' + ',\n');
+                });
+            }
         }
-    });
-    result = result.substring(0, result.lastIndexOf(',')) + '\n';
-    return result;
+    })
+}
+
+let genKeyValue = function*(obj, type){
+    let sortedObjKeys = Object.keys(obj).sort();
+    for (let i = 0; i < sortedObjKeys.length; i++){
+        let key = sortedObjKeys[i];
+        yield getKeyValue(obj, key, type);
+    }
 }
 
 let dict = currentDict || {};
@@ -180,14 +199,22 @@ let writeLangFile = function(path, data){
 }
 
 //输出结果
-let output = function(type){
+let output = async function(type){
     let output = 'var res = {};\n\n';
     var sortedObjKeys = Object.keys(dict).sort();
-    sortedObjKeys.forEach((key)=>{
+    let key;
+    for (var i = 0; i < sortedObjKeys.length; i++){
+        key = sortedObjKeys[i];
+        let kvGen = genKeyValue(dict[key], type);
         output += 'res.' + key + ' = ' + '{\n';
-        output += getKeyValueStr(dict[key], type);
+        let yn = kvGen.next();
+        while (!yn.done){
+            let value = await yn.value;
+            output += value;
+            yn = kvGen.next();
+        }
         output += '}\n';
-    });
+    }
     output += '\n';
     output += 'if ( typeof module === "object" && module && typeof module.exports === "object" ) {\n';
     output += '\tmodule.exports = res;\n';

@@ -1,7 +1,7 @@
 var res = {};
 
 res.bindNewModal = {
-	'plzSelectColumn': '请选择栏目！'
+	'plzSelectColumn': '请选择栏目！',
 }
 res.com = {
 	'addSuccess': ' 添加成功',
@@ -19,14 +19,14 @@ res.com = {
 	'finish': '完成',
 	'refresh': '刷新',
 	'share': '分享',
-	'store': '收藏'
+	'store': '收藏',
 }
 res.entity = {
 	'baseInfo': '基本信息',
 	'catalogInfo': '编目信息',
 	'history': '操作记录',
 	'tags': '标签',
-	'techCensor': '技审信息'
+	'techCensor': '技审信息',
 }
 res.search = {
 	'001': '检索片段',
@@ -135,7 +135,7 @@ res.search = {
 	'removeKeywords': '移除关键字',
 	'searchFile': '检索文件',
 	'searchPlaceholder': '请输入你要搜索的内容',
-	'title': '媒资库检索'
+	'title': '媒资库检索',
 }
 
 if ( typeof module === "object" && module && typeof module.exports === "object" ) {
