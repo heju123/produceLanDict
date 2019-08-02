@@ -1,6 +1,6 @@
 var chineseConverter = require("./utils/chineseConverter");
 const {LocalStorage} = require('node-localstorage');
-var localStorage = new LocalStorage('./.cache')
+var localStorage = new LocalStorage('./.produce_lan_dict_cache')
 const { google } = require('translation.js')
 
 var path = require("path");
