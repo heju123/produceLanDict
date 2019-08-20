@@ -1,4 +1,4 @@
 node_modules
 .idea
-.cache
+.produce_lan_dict_cache
 package-lock.json

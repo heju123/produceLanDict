@@ -1,6 +1,6 @@
 {
   "name": "produce_lan_dict",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "produce_lan_dict",
   "main": "index.js",
   "dependencies": {
@@ -23,9 +23,11 @@
   "homepage": "https://github.com/heju123/produceLanDict.git",
   "devDependencies": {},
   "scripts": {
-    "test": "cd test && node ../index.js"
+    "test": "cd test && node ../index.js",
+    "test_youdao": "cd test && node ../index_youdao.js"
   },
   "bin": {
-    "produce_lan_dict": "./bin/global.js"
+    "produce_lan_dict": "./bin/global.js",
+    "produce_lan_dict_youdao": "./bin/global_youdao.js"
   }
 }
