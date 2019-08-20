@@ -17,6 +17,13 @@ try{
 catch(e){
 }
 
+let enDict;
+try{
+    enDict = require(rootPath + '/' + config.enLangFile);
+}
+catch(e){
+}
+
 //例：(?!aaa) 匹配不包含aaa字符串
 let def = {
     "langFile": "zh.js",
@@ -73,7 +80,7 @@ let setDict = (baseObj, path, value) => {
     });
 }
 
-let getKeyValue = (obj, key, type) => {
+let getKeyValue = (obj, objKey, key, type) => {
     return new Promise((resolve, reject)=>{
         if (type === 'zh'){
             resolve('\t\'' + key + '\'' + ': ' + '\'' + obj[key] + '\'' + ',\n');
@@ -82,6 +89,11 @@ let getKeyValue = (obj, key, type) => {
             resolve('\t\'' + key + '\'' + ': ' + '\'' + chineseConverter.s2t(obj[key]) + '\'' + ',\n');
         }
         else if (type === 'en') {
+            if (enDict && enDict[objKey] && enDict[objKey][key]){
+                console.log('use translate result from en file directly: '+obj[key]+' -> '+enDict[objKey][key]);
+                resolve('\t\'' + key + '\'' + ': ' + '\'' + enDict[objKey][key].replace(/\'/g, '\\\'') + '\'' + ',\n');
+                return;
+            }
             let storageValue = localStorage.getItem('translate_en_' + obj[key]);
             if (storageValue){
                 console.log('translate to en from cache: '+obj[key]+' -> '+storageValue);
@@ -106,11 +118,11 @@ let getKeyValue = (obj, key, type) => {
     })
 }
 
-let genKeyValue = function*(obj, type){
+let genKeyValue = function*(obj, objKey, type){
     let sortedObjKeys = Object.keys(obj).sort();
     for (let i = 0; i < sortedObjKeys.length; i++){
         let key = sortedObjKeys[i];
-        yield getKeyValue(obj, key, type);
+        yield getKeyValue(obj, objKey, key, type);
     }
 }
 
@@ -205,7 +217,7 @@ let output = async function(type){
     let key;
     for (var i = 0; i < sortedObjKeys.length; i++){
         key = sortedObjKeys[i];
-        let kvGen = genKeyValue(dict[key], type);
+        let kvGen = genKeyValue(dict[key], key, type);
         output += 'res.' + key + ' = ' + '{\n';
         let yn = kvGen.next();
         while (!yn.done){
