@@ -90,7 +90,7 @@ let getKeyValue = (obj, objKey, key, type) => {
         }
         else if (type === 'en') {
             if (enDict && enDict[objKey] && enDict[objKey][key]){
-                console.log('use translate result from en file directly: '+obj[key]+' -> '+enDict[objKey][key]);
+                console.log('using translate result from en file directly: '+obj[key]+' -> '+enDict[objKey][key]);
                 resolve('\t\'' + key + '\'' + ': ' + '\'' + enDict[objKey][key].replace(/\'/g, '\\\'') + '\'' + ',\n');
                 return;
             }
