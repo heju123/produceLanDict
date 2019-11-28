@@ -1,7 +1,5 @@
 var chineseConverter = require("./utils/chineseConverter");
-const {LocalStorage} = require('node-localstorage');
-var localStorage = new LocalStorage('./.produce_lan_dict_cache')
-const { google } = require('translation.js')
+const { youdao } = require('translation.js')
 
 var path = require("path");
 const rootPath = process.cwd();
@@ -80,6 +78,10 @@ let setDict = (baseObj, path, value) => {
     });
 }
 
+let upperFirstLetter = (str)=>{
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
 let getKeyValue = (obj, objKey, key, type) => {
     return new Promise((resolve, reject)=>{
         if (type === 'zh'){
@@ -90,21 +92,14 @@ let getKeyValue = (obj, objKey, key, type) => {
         }
         else if (type === 'en') {
             if (enDict && enDict[objKey] && enDict[objKey][key]){
-                console.log('using translate result from en file directly: '+obj[key]+' -> '+enDict[objKey][key]);
-                resolve('\t\'' + key + '\'' + ': ' + '\'' + enDict[objKey][key].replace(/\'/g, '\\\'') + '\'' + ',\n');
-                return;
-            }
-            let storageValue = localStorage.getItem('translate_en_' + obj[key]);
-            if (storageValue){
-                console.log('translate to en from cache: '+obj[key]+' -> '+storageValue);
-                resolve('\t\'' + key + '\'' + ': ' + '\'' + storageValue + '\'' + ',\n');
+                console.log('using translate result from en file directly: '+obj[key]+' -> ' + upperFirstLetter(enDict[objKey][key]));
+                resolve('\t\'' + key + '\'' + ': ' + '\'' + upperFirstLetter(enDict[objKey][key].replace(/\'/g, '\\\'')) + '\'' + ',\n');
             }
             else {
-                google.translate(obj[key]).then(res => {
+                youdao.translate(obj[key]).then(res => {
                     if (res.result && res.result.length > 0){
-                        console.log('translate to en from internet: '+obj[key]+' -> '+res.result[0]);
-                        localStorage.setItem('translate_en_' + obj[key], res.result[0].replace(/\'/g, '\\\''));
-                        resolve('\t\'' + key + '\'' + ': ' + '\'' + res.result[0].replace(/\'/g, '\\\'') + '\'' + ',\n');
+                        console.log('translate to en from internet: '+obj[key]+' -> ' + upperFirstLetter(res.result[0]));
+                        resolve('\t\'' + key + '\'' + ': ' + '\'' + upperFirstLetter(res.result[0].replace(/\'/g, '\\\'')) + '\'' + ',\n');
                     } else {
                         console.error('translate failure: '+obj[key]);
                         resolve('\t\'' + key + '\'' + ': ' + '\'' + obj[key] + '\'' + ',\n');
