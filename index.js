@@ -220,7 +220,7 @@ let writeLangFile = function(path, data){
 let output = async function(type){
     let output = '';
     if (config.outTs){
-        output += 'let res = {};\n\n'
+        output += 'let res: any = {};\n\n'
     }
     else {
         output += 'var res = {};\n\n'
