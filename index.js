@@ -207,7 +207,13 @@ let writeLangFile = function(path, data){
 
 //输出结果
 let output = async function(type){
-    let output = 'var res = {};\n\n';
+    let output = '';
+    if (config.outTs){
+        output += 'let res = {};\n\n'
+    }
+    else {
+        output += 'var res = {};\n\n'
+    }
     var sortedObjKeys = Object.keys(dict).sort();
     let key;
     for (var i = 0; i < sortedObjKeys.length; i++){
@@ -223,13 +229,19 @@ let output = async function(type){
         output += '}\n';
     }
     output += '\n';
-    output += 'if ( typeof module === "object" && module && typeof module.exports === "object" ) {\n';
-    output += '\tmodule.exports = res;\n';
-    output += '} else if ( typeof define === "function" && define.amd ) {\n';
-    output += '\tdefine([], function () {\n';
-    output += '\t\treturn res;\n';
-    output += '\t});\n';
-    output += '}';
+    //输出底部指令
+    if (config.outTs){
+        output += 'export default res';
+    }
+    else {
+        output += 'if ( typeof module === "object" && module && typeof module.exports === "object" ) {\n';
+        output += '\tmodule.exports = res;\n';
+        output += '} else if ( typeof define === "function" && define.amd ) {\n';
+        output += '\tdefine([], function () {\n';
+        output += '\t\treturn res;\n';
+        output += '\t});\n';
+        output += '}';
+    }
     if (type === 'zh'){
         writeLangFile(rootPath + '/' + config.langFile, output);
     }
