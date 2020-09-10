@@ -1,5 +1,5 @@
 var chineseConverter = require("./utils/chineseConverter");
-const { youdao } = require('translation.js')
+const { google,youdao,baidu } = require('translation.js')
 
 var path = require("path");
 const rootPath = process.cwd();
@@ -8,6 +8,17 @@ const configPath = rootPath + '/produceLanDictCfg.json';
 
 const fs = require('fs');
 let config = require(configPath);
+var translator = youdao;
+if (config.translator === 'google'){
+    translator = google;
+}
+else if (config.translator === 'youdao'){
+    translator = youdao;
+}
+else if (config.translator === 'baidu'){
+    translator = baidu;
+}
+
 let currentDict;
 try{
     currentDict = require(rootPath + '/' + config.langFile);
@@ -96,7 +107,7 @@ let getKeyValue = (obj, objKey, key, type) => {
                 resolve('\t\'' + key + '\'' + ': ' + '\'' + upperFirstLetter(enDict[objKey][key].replace(/\'/g, '\\\'')) + '\'' + ',\n');
             }
             else {
-                youdao.translate(obj[key]).then(res => {
+                translator.translate(obj[key]).then(res => {
                     if (res.result && res.result.length > 0){
                         console.log('translate to en from internet: '+obj[key]+' -> ' + upperFirstLetter(res.result[0]));
                         resolve('\t\'' + key + '\'' + ': ' + '\'' + upperFirstLetter(res.result[0].replace(/\'/g, '\\\'')) + '\'' + ',\n');
