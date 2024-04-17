@@ -1,6 +1,6 @@
 {
   "name": "produce_lan_dict",
-  "version": "1.1.9",
+  "version": "1.1.10",
   "description": "produce_lan_dict",
   "main": "index.js",
   "dependencies": {
