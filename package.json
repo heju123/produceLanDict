@@ -26,5 +26,8 @@
   },
   "bin": {
     "produce_lan_dict": "./bin/global.js"
+  },
+  "publishConfig": {
+    "registry": "http://172.16.254.105:8081/repository/npm_hosted/"
   }
 }
