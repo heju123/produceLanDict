@@ -95,8 +95,22 @@ let upperFirstLetter = (str)=>{
 let formatValue = (value)=>{
     return value.replace(/\"/g, '\\\"')
 }
+let batchTranslate = async (batchTranslateGroup, type)=>{
+    let transResult = await ernie.translate(batchTranslateGroup.map(item=>item.value), type)
+    let transResultArr = transResult;
+    let result = ''
+    batchTranslateGroup.forEach((item, itemindex)=>{
+        let transText = formatValue(transResultArr[itemindex]);
+        if (type === 'en'){
+            transText = upperFirstLetter(transText)
+        }
+        result += '\t\"' + item.key + '\"' + ': ' + '\"' + transText + '\"' + ',\n'
+    })
+    return result;
+}
 let getKeyValue = async (obj, objKey, keys, type) => {
     let result = '';
+    let batchTranslateGroup = [];
     for (let i = 0; i < keys.length; i++){
         if (type === 'zh'){
             result += '\t\"' + keys[i] + '\"' + ': ' + '\"' + obj[keys[i]] + '\"' + ',\n'
@@ -111,13 +125,28 @@ let getKeyValue = async (obj, objKey, keys, type) => {
                 result += '\t\"' + keys[i] + '\"' + ': ' + '\"' + formatValue(traditionalDict[objKey][keys[i]]) + '\"' + ',\n';
             }
             else {
-                let transResult = await ernie.translate([obj[keys[i]]], type)
-                if (type === 'en'){
-                    transResult = upperFirstLetter(transResult)
+                // 只包含一个中文字符，会误判，所以单独请求
+                if (/^[\u4E00-\u9FA5]$/.test(obj[keys[i]])){
+                    result += await batchTranslate([{
+                        key: keys[i],
+                        value: obj[keys[i]]
+                    }], type)
                 }
-                result += '\t\"' + keys[i] + '\"' + ': ' + '\"' + formatValue(transResult) + '\"' + ',\n'
+                else {
+                    batchTranslateGroup.push({key: keys[i], value: obj[keys[i]]});
+                    // 组内超过10条，或者当前条是最后一条执行
+                    if (batchTranslateGroup.length >= 20){ 
+                        result += await batchTranslate(batchTranslateGroup, type)
+                        batchTranslateGroup = []
+                    }
+                }
             }
         }
+    }
+    // 最后少于10条的待翻译内容
+    if (batchTranslateGroup.length > 0){
+        result += await batchTranslate(batchTranslateGroup, type)
+        batchTranslateGroup = []
     }
     return result;
 }

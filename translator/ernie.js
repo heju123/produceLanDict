@@ -20,7 +20,7 @@ async function translate(textArr, type) {
         "messages": [
             {
                 "role": "user",
-                "content": `将下列文字翻译成${type === 'en' ? '英文' : type === 'cht' ? '繁体' : '英文'}：` + textArr.map(text=>text).join('，')
+                "content": `将下列文字翻译成${type === 'en' ? '英文' : type === 'cht' ? '繁体' : '英文'},用json格式返回：\n` + JSON.stringify(textArr)
             }
         ],
         "temperature": 0.95,
@@ -33,8 +33,9 @@ async function translate(textArr, type) {
     let res = request("POST", 'https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions?access_token=' + accessToken, {
         json: req
     });
-    let result = JSON.parse(res.getBody()).result;
-    console.log(`requestText：${req.messages[0].content} ----> result：${result}`)
+    let resultJSONStr = JSON.parse(res.getBody()).result.replace(/^```json|```$/g, '');
+    let result = JSON.parse(resultJSONStr);
+    console.log(`requestText：${req.messages[0].content} ----> result：${resultJSONStr}`)
     return result;
 }
     
