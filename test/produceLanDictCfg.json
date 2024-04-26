@@ -1,10 +1,9 @@
 {
-  "langFile": "assets/lang/zh.ts",
-  "traditionalLangFile": "assets/lang/cht.ts",
-  "enLangFile": "assets/lang/en.ts",
+  "langFile": "assets/lang/zh.js",
+  "traditionalLangFile": "assets/lang/cht.js",
+  "enLangFile": "assets/lang/en.js",
   "resolveFiles": [
     "search/**"
   ],
-  "translator": "youdao",
-  "outTs": true
+  "translator": "youdao"
 }

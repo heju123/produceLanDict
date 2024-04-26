@@ -1,34 +1,34 @@
-var chineseConverter = require("./utils/chineseConverter");
-const { google,youdao,baidu } = require('translation.js')
-
 var path = require("path");
 const rootPath = process.cwd();
 
 const configPath = rootPath + '/produceLanDictCfg.json';
 
 const fs = require('fs');
+const ernie = require("./translator/ernie");
 let config = require(configPath);
-var translator = youdao;
-if (config.translator === 'google'){
-    translator = google;
-}
-else if (config.translator === 'youdao'){
-    translator = youdao;
-}
-else if (config.translator === 'baidu'){
-    translator = baidu;
-}
+var translator = ernie;
 
+// 注意：如果翻译不准，则手动修改.cmd.js文件，直接修改.js文件会被覆盖无效
 let currentDict;
 try{
-    currentDict = require(rootPath + '/' + config.langFile);
+    let filename = config.langFile.substring(0, config.langFile.lastIndexOf('.'))
+    currentDict = require(rootPath + '/' + filename + '.cmd.js');
 }
 catch(e){
 }
 
 let enDict;
 try{
-    enDict = require(rootPath + '/' + config.enLangFile);
+    let filename = config.enLangFile.substring(0, config.enLangFile.lastIndexOf('.'))
+    enDict = require(rootPath + '/' + filename + '.cmd.js');
+}
+catch(e){
+}
+
+let traditionalDict;
+try{
+    let filename = config.traditionalLangFile.substring(0, config.traditionalLangFile.lastIndexOf('.'))
+    traditionalDict = require(rootPath + '/' + filename + '.cmd.js');
 }
 catch(e){
 }
@@ -89,47 +89,36 @@ let setDict = (baseObj, path, value) => {
     });
 }
 
-let upperFirstLetter = (str)=>{
-    return str.charAt(0).toUpperCase() + str.slice(1);
+let formatValue = (value)=>{
+    return value.replace(/\"/g, '\\\"')
 }
-
-let getKeyValue = (obj, objKey, key, type) => {
-    return new Promise((resolve, reject)=>{
+let getKeyValue = async (obj, objKey, keys, type) => {
+    let result = '';
+    for (let i = 0; i < keys.length; i++){
         if (type === 'zh'){
-            resolve('\t\'' + key + '\'' + ': ' + '\'' + obj[key] + '\'' + ',\n');
+            result += '\t\"' + keys[i] + '\"' + ': ' + '\"' + obj[keys[i]] + '\"' + ',\n'
         }
-        else if (type === 'cht') {
-            resolve('\t\'' + key + '\'' + ': ' + '\'' + chineseConverter.s2t(obj[key]) + '\'' + ',\n');
-        }
-        else if (type === 'en') {
-            if (enDict && enDict[objKey] && enDict[objKey][key]){
-                console.log('using translate result from en file directly: '+obj[key]+' -> ' + upperFirstLetter(enDict[objKey][key]));
-                resolve('\t\'' + key + '\'' + ': ' + '\'' + upperFirstLetter(enDict[objKey][key].replace(/\'/g, '\\\'')) + '\'' + ',\n');
+        else {
+            if (type === 'en' && enDict && enDict[objKey] && enDict[objKey][keys[i]]){
+                console.log('using translate result from en file directly: '+obj[keys[i]]+' -> ' + formatValue(enDict[objKey][keys[i]]));
+                result += '\t\"' + keys[i] + '\"' + ': ' + '\"' + formatValue(enDict[objKey][keys[i]]) + '\"' + ',\n';
+            }
+            else if (type === 'cht' && traditionalDict && traditionalDict[objKey] && traditionalDict[objKey][keys[i]]){
+                console.log('using translate result from cht file directly: '+obj[keys[i]]+' -> ' + formatValue(traditionalDict[objKey][keys[i]]));
+                result += '\t\"' + keys[i] + '\"' + ': ' + '\"' + formatValue(traditionalDict[objKey][keys[i]]) + '\"' + ',\n';
             }
             else {
-                translator.translate(obj[key]).then(res => {
-                    if (res.result && res.result.length > 0){
-                        console.log('translate to en from internet: '+obj[key]+' -> ' + upperFirstLetter(res.result[0]));
-                        resolve('\t\'' + key + '\'' + ': ' + '\'' + upperFirstLetter(res.result[0].replace(/\'/g, '\\\'')) + '\'' + ',\n');
-                    } else {
-                        console.error('translate failure: '+obj[key]);
-                        resolve('\t\'' + key + '\'' + ': ' + '\'' + obj[key] + '\'' + ',\n');
-                    }
-                }).catch(err=>{
-                    console.error('translate failure: '+obj[key]);
-                    resolve('\t\'' + key + '\'' + ': ' + '\'' + obj[key] + '\'' + ',\n');
-                });
+                let transResult = await ernie.translate([obj[keys[i]]], type)
+                result += '\t\"' + keys[i] + '\"' + ': ' + '\"' + formatValue(transResult) + '\"' + ',\n'
             }
         }
-    })
+    }
+    return result;
 }
 
-let genKeyValue = function*(obj, objKey, type){
+let genKeyValue = async function(obj, objKey, type){
     let sortedObjKeys = Object.keys(obj).sort();
-    for (let i = 0; i < sortedObjKeys.length; i++){
-        let key = sortedObjKeys[i];
-        yield getKeyValue(obj, objKey, key, type);
-    }
+    return await getKeyValue(obj, objKey, sortedObjKeys, type);
 }
 
 let dict = currentDict || {};
@@ -219,49 +208,34 @@ let writeLangFile = function(path, data){
 //输出结果
 let output = async function(type){
     let output = '';
-    if (config.outTs){
-        output += 'let res: any = {};\n\n'
-    }
-    else {
-        output += 'var res = {};\n\n'
-    }
+    output += 'var res = {};\n\n'
     var sortedObjKeys = Object.keys(dict).sort();
     let key;
     for (var i = 0; i < sortedObjKeys.length; i++){
         key = sortedObjKeys[i];
-        let kvGen = genKeyValue(dict[key], key, type);
+        let values = await genKeyValue(dict[key], key, type);
         output += 'res.' + key + ' = ' + '{\n';
-        let yn = kvGen.next();
-        while (!yn.done){
-            let value = await yn.value;
-            output += value;
-            yn = kvGen.next();
-        }
+        output += values;
         output += '}\n';
     }
     output += '\n';
+
+    let outputCmd = output;
     //输出底部指令
-    if (config.outTs){
-        output += 'export default res';
-    }
-    else {
-        output += 'if ( typeof module === "object" && module && typeof module.exports === "object" ) {\n';
-        output += '\tmodule.exports = res;\n';
-        output += '} else if ( typeof define === "function" && define.amd ) {\n';
-        output += '\tdefine([], function () {\n';
-        output += '\t\treturn res;\n';
-        output += '\t});\n';
-        output += '}';
-    }
+    output += 'export default res';
+    outputCmd += 'module.exports = res';
+    let filename = ''
     if (type === 'zh'){
-        writeLangFile(rootPath + '/' + config.langFile, output);
+        filename = config.langFile.substring(0, config.langFile.lastIndexOf('.'))
     }
     else if (type === 'cht'){
-        writeLangFile(rootPath + '/' + config.traditionalLangFile, output);
+        filename = config.traditionalLangFile.substring(0, config.traditionalLangFile.lastIndexOf('.'))
     }
     else if (type === 'en'){
-        writeLangFile(rootPath + '/' + config.enLangFile, output);
+        filename = config.enLangFile.substring(0, config.enLangFile.lastIndexOf('.'))
     }
+    writeLangFile(rootPath + '/' + filename + '.js', output);
+    writeLangFile(rootPath + '/' + filename + '.cmd.js', outputCmd);
 }
 output('zh')
 if (config.traditionalLangFile){
