@@ -11,10 +11,6 @@ async function getAccessToken() {
     return JSON.parse(res.getBody()).access_token;
 }
 
-let upperFirstLetter = (str)=>{
-    return str.charAt(0).toUpperCase() + str.slice(1);
-}
-
 let accessToken = ''
 async function translate(textArr, type) {
     if (!accessToken){
@@ -38,9 +34,6 @@ async function translate(textArr, type) {
         json: req
     });
     let result = JSON.parse(res.getBody()).result;
-    if (type === 'en'){
-        result = upperFirstLetter(result)
-    }
     console.log(`requestText：${req.messages[0].content} ----> result：${result}`)
     return result;
 }

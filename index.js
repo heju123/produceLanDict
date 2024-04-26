@@ -89,6 +89,9 @@ let setDict = (baseObj, path, value) => {
     });
 }
 
+let upperFirstLetter = (str)=>{
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
 let formatValue = (value)=>{
     return value.replace(/\"/g, '\\\"')
 }
@@ -109,6 +112,9 @@ let getKeyValue = async (obj, objKey, keys, type) => {
             }
             else {
                 let transResult = await ernie.translate([obj[keys[i]]], type)
+                if (type === 'en'){
+                    transResult = upperFirstLetter(transResult)
+                }
                 result += '\t\"' + keys[i] + '\"' + ': ' + '\"' + formatValue(transResult) + '\"' + ',\n'
             }
         }

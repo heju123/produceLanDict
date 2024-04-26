@@ -6,9 +6,9 @@ res.bindNewModal = {
 res.com = {
 	"addSuccess": "Added successfully",
 	"allSelect": "Select all",
-	"cancelStore": "Uncollect",
+	"cancelStore": "Unfavorite",
 	"catalog": "Cataloguing",
-	"close": "Close",
+	"close": "Turn off",
 	"del": "Delete",
 	"deleteFailed": "Deletion failed",
 	"deleteFailure": "Deletion failed",
