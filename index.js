@@ -8,29 +8,32 @@ const ernie = require("./translator/ernie");
 let config = require(configPath);
 var translator = ernie;
 
-// 注意：如果翻译不准，则手动修改.cmd.js文件，直接修改.js文件会被覆盖无效
+// 注意：如果翻译不准，则手动修改.cjs文件，直接修改.js文件会被覆盖无效
 let currentDict;
 try{
     let filename = config.langFile.substring(0, config.langFile.lastIndexOf('.'))
-    currentDict = require(rootPath + '/' + filename + '.cmd.js');
+    currentDict = require(rootPath + '/' + filename + '.cjs');
 }
 catch(e){
+    console.log(`${rootPath + '/' + config.langFile.substring(0, config.langFile.lastIndexOf('.')) + '.cjs'} 文件不存在`)
 }
 
 let enDict;
 try{
     let filename = config.enLangFile.substring(0, config.enLangFile.lastIndexOf('.'))
-    enDict = require(rootPath + '/' + filename + '.cmd.js');
+    enDict = require(rootPath + '/' + filename + '.cjs');
 }
 catch(e){
+    console.log(`${rootPath + '/' + config.langFile.substring(0, config.langFile.lastIndexOf('.')) + '.cjs'} 文件不存在`)
 }
 
 let traditionalDict;
 try{
     let filename = config.traditionalLangFile.substring(0, config.traditionalLangFile.lastIndexOf('.'))
-    traditionalDict = require(rootPath + '/' + filename + '.cmd.js');
+    traditionalDict = require(rootPath + '/' + filename + '.cjs');
 }
 catch(e){
+    console.log(`${rootPath + '/' + config.langFile.substring(0, config.langFile.lastIndexOf('.')) + '.cjs'} 文件不存在`)
 }
 
 //例：(?!aaa) 匹配不包含aaa字符串
@@ -165,7 +168,7 @@ let dict = currentDict || {};
 const paths = config.resolveFiles;
 
 let resolveFile = (path)=>{
-    console.log('resolve file ' + path);
+    // console.log('resolve file ' + path);
     let resolveData = fs.readFileSync(path, 'utf8');
 
     config.match.forEach((match)=>{
@@ -286,7 +289,7 @@ let output = async function(type){
         filename = config.enLangFile.substring(0, config.enLangFile.lastIndexOf('.'))
     }
     writeLangFile(rootPath + '/' + filename + '.js', output);
-    writeLangFile(rootPath + '/' + filename + '.cmd.js', outputCmd);
+    writeLangFile(rootPath + '/' + filename + '.cjs', outputCmd);
 }
 output('zh')
 if (config.traditionalLangFile){
