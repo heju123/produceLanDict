@@ -96,7 +96,11 @@ let formatValue = (value)=>{
     return value.replace(/\"/g, '\\\"')
 }
 let batchTranslate = async (batchTranslateGroup, type)=>{
-    let transResult = await ernie.translate(batchTranslateGroup.filter(item=>item.value !== '' && item.value !== undefined).map(item=>item.value), type)
+    let batchParam = batchTranslateGroup.filter(item=>item.value !== '' && item.value !== undefined).map(item=>item.value);
+    if (batchParam.length === 0){
+        return '';
+    }
+    let transResult = await ernie.translate(batchParam, type)
     let transResultArr = transResult;
     let result = ''
     batchTranslateGroup.forEach((item, itemindex)=>{
