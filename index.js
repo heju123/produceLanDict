@@ -103,7 +103,7 @@ let batchTranslate = async (batchTranslateGroup, type)=>{
     let transResult = await ernie.translate(batchParam, type)
     let transResultArr = transResult;
     let result = ''
-    batchTranslateGroup.forEach((item, itemindex)=>{
+    batchParam.forEach((item, itemindex)=>{
         let transText = formatValue(transResultArr[itemindex]);
         if (type === 'en'){
             transText = upperFirstLetter(transText)
@@ -139,7 +139,7 @@ let getKeyValue = async (obj, objKey, keys, type) => {
                 else {
                     batchTranslateGroup.push({key: keys[i], value: obj[keys[i]]});
                     // 组内超过10条，或者当前条是最后一条执行
-                    if (batchTranslateGroup.length >= 20){ 
+                    if (batchTranslateGroup.length >= 40){ 
                         result += await batchTranslate(batchTranslateGroup, type)
                         batchTranslateGroup = []
                     }

@@ -35,7 +35,7 @@ async function translate(textArr, type) {
     });
     let resultJSONStr = JSON.parse(res.getBody()).result.replace(/^```json|```$/g, '');
     let result = JSON.parse(resultJSONStr);
-    console.log(`requestText：${req.messages[0].content} ----> result：${resultJSONStr}`)
+    console.log(`requestText：\n${req.messages[0].content}\n ----> \nresult：${resultJSONStr}\n`)
     return result;
 }
     
