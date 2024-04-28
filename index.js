@@ -96,14 +96,14 @@ let formatValue = (value)=>{
     return value.replace(/\"/g, '\\\"')
 }
 let batchTranslate = async (batchTranslateGroup, type)=>{
-    let batchParam = batchTranslateGroup.filter(item=>item.value !== '' && item.value !== undefined).map(item=>item.value);
-    if (batchParam.length === 0){
+    let filterGroup = batchTranslateGroup.filter(item=>item.value !== '' && item.value !== undefined);
+    if (filterGroup.length === 0){
         return '';
     }
-    let transResult = await ernie.translate(batchParam, type)
+    let transResult = await ernie.translate(filterGroup.map(item=>item.value), type)
     let transResultArr = transResult;
     let result = ''
-    batchParam.forEach((item, itemindex)=>{
+    filterGroup.forEach((item, itemindex)=>{
         let transText = formatValue(transResultArr[itemindex]);
         if (type === 'en'){
             transText = upperFirstLetter(transText)
@@ -139,7 +139,7 @@ let getKeyValue = async (obj, objKey, keys, type) => {
                 else {
                     batchTranslateGroup.push({key: keys[i], value: obj[keys[i]]});
                     // 组内超过10条，或者当前条是最后一条执行
-                    if (batchTranslateGroup.length >= 40){ 
+                    if (batchTranslateGroup.length >= (config.batchQueryNumber || 40)){ 
                         result += await batchTranslate(batchTranslateGroup, type)
                         batchTranslateGroup = []
                     }
