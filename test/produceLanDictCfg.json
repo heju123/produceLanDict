@@ -5,5 +5,5 @@
   "resolveFiles": [
     "search/**"
   ],
-  "translator": "youdao"
+  "exportMode": "amd&cmd"
 }

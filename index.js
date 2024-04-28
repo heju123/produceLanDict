@@ -96,7 +96,7 @@ let formatValue = (value)=>{
     return value.replace(/\"/g, '\\\"')
 }
 let batchTranslate = async (batchTranslateGroup, type)=>{
-    let transResult = await ernie.translate(batchTranslateGroup.map(item=>item.value), type)
+    let transResult = await ernie.translate(batchTranslateGroup.filter(item=>item.value !== '' && item.value !== undefined).map(item=>item.value), type)
     let transResultArr = transResult;
     let result = ''
     batchTranslateGroup.forEach((item, itemindex)=>{
@@ -257,7 +257,19 @@ let output = async function(type){
 
     let outputCmd = output;
     //输出底部指令
-    output += 'export default res';
+    if (config.exportMode === 'amd&cmd'){
+        output += '\n';
+        output += 'if ( typeof module === "object" && module && typeof module.exports === "object" ) {\n';
+        output += '\tmodule.exports = res;\n';
+        output += '} else if ( typeof define === "function" && define.amd ) {\n';
+        output += '\tdefine([], function () {\n';
+        output += '\t\treturn res;\n';
+        output += '\t});\n';
+        output += '}';
+    }
+    else {
+        output += 'export default res';
+    }
     outputCmd += 'module.exports = res';
     let filename = ''
     if (type === 'zh'){

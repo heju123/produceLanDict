@@ -138,4 +138,11 @@ res.search = {
 	"title": "媒资库检索",
 }
 
-export default res
+
+if ( typeof module === "object" && module && typeof module.exports === "object" ) {
+	module.exports = res;
+} else if ( typeof define === "function" && define.amd ) {
+	define([], function () {
+		return res;
+	});
+}
