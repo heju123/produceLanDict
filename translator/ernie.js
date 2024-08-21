@@ -30,12 +30,14 @@ async function translate(textArr, type) {
         "enable_citation": false,
         "response_format": "text"
     };
+    console.log(`requestText：\n${req.messages[0].content}`)
     let res = request("POST", 'https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions?access_token=' + accessToken, {
         json: req
     });
-    let resultJSONStr = JSON.parse(res.getBody()).result.replace(/^```json|```$/g, '');
+    let parseResult = JSON.parse(res.getBody()).result;
+    console.log(`result：${parseResult}\n`)
+    let resultJSONStr = parseResult.replace(/^```json|```$/g, '');
     let result = JSON.parse(resultJSONStr);
-    console.log(`requestText：\n${req.messages[0].content}\n ----> \nresult：${resultJSONStr}\n`)
     return result;
 }
     
