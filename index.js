@@ -96,7 +96,13 @@ let upperFirstLetter = (str)=>{
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
 let formatValue = (value)=>{
-    return value.replace(/\"/g, '\\\"')
+    try {
+        return value.replace(/\"/g, '\\\"')
+    }
+    catch (e){
+        console.error(value, e.message)
+        return value;
+    }
 }
 let batchTranslate = async (batchTranslateGroup, type)=>{
     let filterGroup = batchTranslateGroup.filter(item=>item.value !== '' && item.value !== undefined);
